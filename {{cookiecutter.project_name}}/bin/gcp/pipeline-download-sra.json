@@ -1,0 +1,102 @@
+﻿{
+  "actions": [
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "mkdir -v /data/${SAMPLE} > /data/pipeline_download_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "vdb-config --report-cloud-identity yes --accept-gcp-charges yes"
+      ],
+      "imageUri": "ncbi/sra-tools",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/root"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "echo /LIBS/GUID = \\\"`cat /proc/sys/kernel/random/uuid`\\\" >> /data/.ncbi/user-settings.mkfg"
+      ],
+      "imageUri": "gcr.io/cbb-research-dl/cwltool",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/bash",
+        "-c",
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/sra/download_quality_control.cwl --ncbi_config=/data/.ncbi --threads $CPUs --split-files --accession ${SAMPLE} >> /data/pipeline_download_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "gcr.io/cbb-research-dl/cwltool",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/pipeline_download_${SAMPLE}.log /data/${SAMPLE}/* gs://${OUTBUCKET}/"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    }
+  ],
+  "environment": {
+    "CPUs": "16"
+  },
+  "resources": {
+    "virtualMachine": {
+      "bootDiskSizeGb": 60,
+      "bootImage": "projects/cos-cloud/global/images/family/cos-stable",
+      "disks": [
+        {
+          "name": "gcloud-shared",
+          "sizeGb": 375,
+          "type":"local-ssd"
+        }
+      ],
+      "machineType": "n1-standard-16",
+      "preemptible": true,
+      "serviceAccount": {
+        "email": "default",
+        "scopes": [
+          "https://www.googleapis.com/auth/cloud-platform"
+        ]
+      }
+    },
+    "zones": [
+      "us-east4-c"
+    ]
+  }
+}

@@ -1,0 +1,86 @@
+﻿{
+  "actions": [
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "mkdir -v /data/${SAMPLE} > /data/pipeline_fasta_split_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R gs://${INBUCKET}/${SAMPLE}_clean_1.fastq.fsa /data/${SAMPLE}_clean_1.fastq.fsa >> /data/pipeline_fasta_split_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/bash",
+        "-c",
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/tools/python/split-fasta.cwl --fasta /data/${SAMPLE}_clean_1.fastq.fsa --total_per_file ${SEQNUMBER} >> /data/pipeline_fasta_split_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "gcr.io/cbb-research-dl/cwltool",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/pipeline_fasta_split_${SAMPLE}.log /data/${SAMPLE}/* gs://${OUTBUCKET}/"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    }
+  ],
+  "environment": {},
+  "resources": {
+    "virtualMachine": {
+      "bootDiskSizeGb": 60,
+      "bootImage": "projects/cos-cloud/global/images/family/cos-stable",
+      "disks": [
+        {
+          "name": "gcloud-shared",
+          "sizeGb": 375,
+          "type":"local-ssd"
+        }
+      ],
+      "machineType": "n1-standard-2",
+      "preemptible": true,
+      "serviceAccount": {
+        "email": "default",
+        "scopes": [
+          "https://www.googleapis.com/auth/cloud-platform"
+        ]
+      }
+    },
+    "zones": [
+      "us-east4-c"
+    ]
+  }
+}

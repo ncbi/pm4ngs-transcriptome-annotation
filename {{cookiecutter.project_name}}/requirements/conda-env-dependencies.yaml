@@ -1,0 +1,7 @@
+name: rnaseq
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - elastic-blast=0.1.4

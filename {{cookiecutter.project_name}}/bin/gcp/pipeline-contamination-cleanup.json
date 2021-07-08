@@ -1,0 +1,116 @@
+﻿{
+  "actions": [
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "mkdir -v /data/${SAMPLE} /data/blastdir > /data/pipeline_cont_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -m cp gs://${BLAST_BUCKET}/*.out.gz /data/blastdir/ >> /data/pipeline_cont_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -m cp gs://${INBUCKET}/taxonomy_networkx.pickle /data/taxonomy_networkx.pickle >> /data/pipeline_cont_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -m cp gs://${INBUCKET}/${SAMPLE}_clean_*.fastq.gz /data/ >> /data/pipeline_cont_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/bash",
+        "-c",
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/File-formats/remove-fastq-reads-from-blast.cwl --blastdir /data/blastdir --tax_pickle /data/taxonomy_networkx.pickle --tax_id ${TAXID} --fastq1 /data/${SAMPLE}_clean_1.fastq.gz --fastq2 /data/${SAMPLE}_clean_2.fastq.gz --threads ${CPUs} >> /data/pipeline_cont_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "gcr.io/cbb-research-dl/cwltool",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/pipeline_cont_clean_${SAMPLE}.log /data/${SAMPLE}/* gs://${OUTBUCKET}/"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    }
+  ],
+  "environment": {
+      "CPUs": "2"
+  },
+  "resources": {
+    "virtualMachine": {
+      "bootDiskSizeGb": 60,
+      "bootImage": "projects/cos-cloud/global/images/family/cos-stable",
+      "disks": [
+        {
+          "name": "gcloud-shared",
+          "sizeGb": 375,
+          "type":"local-ssd"
+        }
+      ],
+      "machineType": "n1-standard-2",
+      "preemptible": true,
+      "serviceAccount": {
+        "email": "default",
+        "scopes": [
+          "https://www.googleapis.com/auth/cloud-platform"
+        ]
+      }
+    },
+    "zones": [
+      "us-east4-c"
+    ]
+  }
+}

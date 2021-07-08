@@ -1,0 +1,130 @@
+﻿{
+  "actions": [
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "mkdir -v /data/${SAMPLE} > /data/pipeline_blastn_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp gs://transcriptome-srr3478185-5ec68e25-0a77-4dd2-895a-c62166c3e76a/100000_1.fsa.gz /data/100000_1.fsa.gz >> /data/pipeline_blastn_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gunzip -v /data/100000_1.fsa.gz >> /data/pipeline_blastn_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil cp gs://cbb-research-dl-blastdb-v5/BOTO_CONFIG /data/.boto >> /data/pipeline_blastn_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "BOTO_PATH=/data/.boto gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' -o 'GSUtil:parallel_process_count=16' -o 'GSUtil:parallel_thread_count=16' cp gs://cbb-research-dl-blastdb-v5/nt* /data/ >> /data/pipeline_blastn_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/bash",
+        "-c",
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/tools/blast/blastn.cwl --db nt --task megablast --dbdir /data --evalue 1e-5 --max_target_seqs 5 --num_threads $CPUs --out ${SAMPLE}_blastn.tsv --query /data/100000_1.fsa >> /data/pipeline_blastn_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "gcr.io/cbb-research-dl/cwltool",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "BOTO_PATH=/data/.boto gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/pipeline_blastn_${SAMPLE}.log /data/${SAMPLE}/* gs://${OUTBUCKET}/"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    }
+  ],
+  "environment": {
+    "CPUs": "16"
+  },
+  "resources": {
+    "virtualMachine": {
+      "bootDiskSizeGb": 60,
+      "bootImage": "projects/cos-cloud/global/images/family/cos-stable",
+      "disks": [
+        {
+          "name": "gcloud-shared",
+          "sizeGb": 750,
+          "type":"local-ssd"
+        }
+      ],
+      "machineType": "n1-standard-16",
+      "preemptible": true,
+      "serviceAccount": {
+        "email": "default",
+        "scopes": [
+          "https://www.googleapis.com/auth/cloud-platform"
+        ]
+      }
+    },
+    "zones": [
+      "us-east4-c"
+    ]
+  }
+}

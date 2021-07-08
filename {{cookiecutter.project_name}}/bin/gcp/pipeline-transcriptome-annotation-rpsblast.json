@@ -1,0 +1,145 @@
+﻿{
+  "actions": [
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil cp gs://${BLASTDB_BUCKET}/BOTO_CONFIG /data/.boto > /data/rpsblast_pipeline.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "BOTO_PATH=/data/.boto gsutil -m rsync -x \"nt.*|nr.*\" gs://${BLASTDB_BUCKET}/ /data/ >> /data/rpsblast_pipeline.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "BOTO_PATH=/data/.boto gsutil -m -q cp gs://${BUCKET}/${SAMPLE}/${SAMPLE}_nocont_transdecoder.fsa.gz /data/ >> /data/rpsblast_pipeline.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gunzip -v9 /data/${SAMPLE}_nocont_transdecoder.fsa.gz >> /data/rpsblast_pipeline.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/bash",
+        "-c",
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/ https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/tools/blast/rpsblast.cwl --dbdir /data --db cdd_split --num_threads 8 --evalue 1e-5 --max_target_seqs 1000 --out ${SAMPLE}_nocont_rpsblast.tsv --query /data/${SAMPLE}_nocont_transdecoder.fsa >> /data/rpsblast_pipeline.log 2>&1"
+      ],
+      "imageUri": "gcr.io/cbb-research-dl/cwltool",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gzip -v -9 /data/${SAMPLE}_nocont_rpsblast.tsv >> /data/rpsblast_pipeline.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "BOTO_PATH=/data/.boto gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/${SAMPLE}_nocont_rpsblast.tsv.gz gs://${BUCKET}/${SAMPLE}/ >> /data/rpsblast_pipeline.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil cp /data/rpsblast_pipeline.log gs://${BUCKET}/${SAMPLE}/"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    }
+  ],
+  "environment": {
+    "BOTO_PATH": "/data/.boto"
+  },
+  "resources": {
+    "virtualMachine": {
+      "bootDiskSizeGb": 60,
+      "bootImage": "projects/cos-cloud/global/images/family/cos-stable",
+      "disks": [
+        {
+          "name": "gcloud-shared",
+          "sizeGb": 375,
+          "type": "local-ssd"
+        }
+      ],
+      "machineType": "n1-standard-8",
+      "preemptible": true,
+      "serviceAccount": {
+        "email": "default",
+        "scopes": [
+          "https://www.googleapis.com/auth/cloud-platform"
+        ]
+      }
+    },
+    "zones": [
+      "us-east1-c"
+    ]
+  }
+}

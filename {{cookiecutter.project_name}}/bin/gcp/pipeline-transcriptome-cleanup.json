@@ -1,0 +1,119 @@
+﻿{
+  "actions": [
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "mkdir -v /data/output > /data/pipeline.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/bash",
+        "-c",
+        "curl -o /data/UniVec.fa https://ftp.ncbi.nlm.nih.gov/pub/UniVec/UniVec >> /data/pipeline.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R gs://${INBUCKET}/${TRANSCRIPTOME} /data/transcriptome.fsa.gz >> /data/pipeline.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "cwltool --no-container --on-error continue --rm-tmpdir --tmp-outdir-prefix=/data/ --tmpdir-prefix=/data/ --outdir /data/output https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/Annotation/transcriptome-cleanup.cwl --total_per_file ${QUERY_SIZE} --threads ${CPUs} --trans_fsa_gz /data/transcriptome.fsa.gz --vector_fsa /data/UniVec.fa --min_length 200 --evalue ${EVALUE} >> /data/pipeline.log 2>&1"
+      ],
+      "imageUri": "gcr.io/cbb-research-dl/transannot",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/output/*.fsa.gz gs://${INBUCKET}/ >> /data/pipeline.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil cp /data/pipeline.log gs://${INBUCKET}/"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    }
+  ],
+  "environment": {
+    "CPUs": "64"
+  },
+  "resources": {
+    "virtualMachine": {
+      "bootDiskSizeGb": 60,
+      "bootImage": "projects/cos-cloud/global/images/family/cos-stable",
+      "disks": [
+        {
+          "name": "gcloud-shared",
+          "sizeGb": 375,
+          "type":"local-ssd"
+        }
+      ],
+      "machineType": "n1-standard-64",
+      "preemptible": true,
+      "serviceAccount": {
+        "email": "default",
+        "scopes": [
+          "https://www.googleapis.com/auth/cloud-platform"
+        ]
+      }
+    },
+    "zones": [
+      "us-east4-c"
+    ]
+  }
+}

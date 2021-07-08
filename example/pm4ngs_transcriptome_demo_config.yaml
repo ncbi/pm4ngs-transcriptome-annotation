@@ -1,0 +1,5 @@
+default_context:
+  author_name: "Roberto Vera Alvarez"
+  user_email: "veraalva@ncbi.nlm.nih.gov"
+  project_name: "nopal-transcriptome"
+  dataset_name: "PRJNA320545"
