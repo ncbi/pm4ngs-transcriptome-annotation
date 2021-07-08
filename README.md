@@ -4,7 +4,7 @@
 
 This is a PM4NGS pipeline repository. It is not intended to be used as a single package. 
 Please, read the PM4NGS documentation for this pipeline: 
-https://pm4ngs.readthedocs.io/en/latest/pipelines/rnaseqDGAPipeline.html 
+https://pm4ngs.readthedocs.io/en/latest/pipelines/transcriptomePipeline.html 
 
 ## Basic requirements
 
