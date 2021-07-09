@@ -83,7 +83,7 @@ DATASET = '{{ cookiecutter.dataset_name }}'
 if not distutils.spawn.find_executable('gcloud'):
     raise ImportError('gcloud not in path.\nInstall: google-cloud-sdk\n')
 
-if not distutils.spawn.find_executable('elastic-blast'):
+if not distutils.spawn.find_executable('elastic-blast.py'):
     raise ImportError('elastic-blast not in path.\nInstall: elastic-blast\n')
 
 if not distutils.spawn.find_executable('kubectl'):
