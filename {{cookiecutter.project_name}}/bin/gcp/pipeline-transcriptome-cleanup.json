@@ -47,9 +47,9 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "cwltool --no-container --on-error continue --rm-tmpdir --tmp-outdir-prefix=/data/ --tmpdir-prefix=/data/ --outdir /data/output https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/Annotation/transcriptome-cleanup.cwl --total_per_file ${QUERY_SIZE} --threads ${CPUs} --trans_fsa_gz /data/transcriptome.fsa.gz --vector_fsa /data/UniVec.fa --min_length 200 --evalue ${EVALUE} >> /data/pipeline.log 2>&1"
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --rm-tmpdir --tmp-outdir-prefix=/data/ --tmpdir-prefix=/data/ --outdir /data/output https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/Annotation/transcriptome-cleanup.cwl --total_per_file ${QUERY_SIZE} --threads ${CPUs} --trans_fsa_gz /data/transcriptome.fsa.gz --vector_fsa /data/UniVec.fa --min_length 200 --evalue ${EVALUE} >> /data/pipeline.log 2>&1"
       ],
-      "imageUri": "gcr.io/cbb-research-dl/transannot",
+      "imageUri": "gcr.io/cbb-research-dl/cwltool",
       "mounts": [
         {
           "disk": "gcloud-shared",
