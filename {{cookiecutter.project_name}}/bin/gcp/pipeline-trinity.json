@@ -101,7 +101,7 @@
           "type":"local-ssd"
         }
       ],
-      "machineType": "n2d-standard-128",
+      "machineType": "n2d-standard-64",
       "preemptible": true,
       "serviceAccount": {
         "email": "default",
