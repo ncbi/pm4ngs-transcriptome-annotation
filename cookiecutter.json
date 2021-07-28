@@ -3,6 +3,7 @@
   "email": "veraalva@ncbi.nlm.nih.gov",
   "project_name": "my_ngs_project",
   "dataset_name": "my_dataset_name",
+  "scientific_name": "organism scientific name",
   "sequencing_technology": ["single-end", "paired-end"]
 }
 
