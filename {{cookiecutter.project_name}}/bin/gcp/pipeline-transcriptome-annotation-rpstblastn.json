@@ -4,7 +4,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil cp gs://${BLASTDB_BUCKET}/BOTO_CONFIG /data/.boto > /data/rpstblastn_pipeline.log 2>&1"
+        "gsutil -q cp gs://${BLASTDB_BUCKET}/BOTO_CONFIG /data/.boto > /data/rpstblastn_pipeline.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -18,7 +18,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "BOTO_PATH=/data/.boto gsutil -m rsync -x \"nt.*|nr.*\" gs://${BLASTDB_BUCKET}/ /data/ >> /data/rpstblastn_pipeline.log 2>&1"
+        "BOTO_PATH=/data/.boto gsutil -q -m rsync -x \"nt.*|nr.*\" gs://${BLASTDB_BUCKET}/ /data/ >> /data/rpstblastn_pipeline.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -32,7 +32,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "BOTO_PATH=/data/.boto gsutil -m -q cp gs://${BUCKET}/${SAMPLE}/${SAMPLE}_nocont.fsa.gz /data/ >> /data/rpstblastn_pipeline.log 2>&1"
+        "BOTO_PATH=/data/.boto gsutil -q -m -q cp gs://${BUCKET}/${SAMPLE}/${SAMPLE}_nocont.fsa.gz /data/ >> /data/rpstblastn_pipeline.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -88,7 +88,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "BOTO_PATH=/data/.boto gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/${SAMPLE}_nocont_rpstblastn.tsv.gz gs://${BUCKET}/${SAMPLE}/ >> /data/rpstblastn_pipeline.log 2>&1"
+        "BOTO_PATH=/data/.boto gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/${SAMPLE}_nocont_rpstblastn.tsv.gz gs://${BUCKET}/${SAMPLE}/ >> /data/rpstblastn_pipeline.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -103,7 +103,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil cp /data/rpstblastn_pipeline.log gs://${BUCKET}/${SAMPLE}/"
+        "gsutil -q cp /data/rpstblastn_pipeline.log gs://${BUCKET}/${SAMPLE}/"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [

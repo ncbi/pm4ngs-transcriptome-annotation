@@ -4,7 +4,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "mkdir -v /data/${SAMPLE} > /data/pipeline_trimming_${SAMPLE}.log 2>&1"
+        "mkdir -v /data/${DB} > /data/pipeline_blastn_${DB}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -18,7 +18,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R gs://${INBUCKET}/${SAMPLE}_1.fastq.gz /data/${SAMPLE}_1.fastq.gz >> /data/pipeline_trimming_${SAMPLE}.log 2>&1"
+        "gsutil -q -m cp -R gs://${DBBUCKET}/${DB} /data/ >> /data/pipeline_blastn_${DB}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -26,13 +26,14 @@
           "disk": "gcloud-shared",
           "path": "/data"
         }
-      ]
-    },
+      ],
+      "alwaysRun": true
+    }    ,
     {
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R gs://${INBUCKET}/${SAMPLE}_2.fastq.gz /data/${SAMPLE}_2.fastq.gz >> /data/pipeline_trimming_${SAMPLE}.log 2>&1"
+        "gsutil -q -m cp -R gs://${INBUCKET}/${SAMPLE} /data/ >> /data/pipeline_blastn_${DB}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -40,27 +41,14 @@
           "disk": "gcloud-shared",
           "path": "/data"
         }
-      ]
-    },
-    {
-      "commands": [
-        "/bin/sh",
-        "-c",
-        "gsutil -q cp gs://${INBUCKET}/${SAMPLE}_trimming.yml /data/${SAMPLE}_trimming.yml >> /data/pipeline_trimming_${SAMPLE}.log 2>&1"
       ],
-      "imageUri": "google/cloud-sdk:slim",
-      "mounts": [
-        {
-          "disk": "gcloud-shared",
-          "path": "/data"
-        }
-      ]
+      "alwaysRun": true
     },
     {
       "commands": [
         "/bin/bash",
         "-c",
-        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/pre-processing/trimming-qc-pe.cwl /data/${SAMPLE}_trimming.yml >> /data/pipeline_trimming_${SAMPLE}.log 2>&1"
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${DB} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/Contamination/contamination-foreign-chromosome.cwl --blastdb /data/${DB} --blastdb_name ${DB} --threads ${CPUs} --trans_fsa_gz ${SAMPLE} >> /data/pipeline_blastn_${DB}.log 2>&1"
       ],
       "imageUri": "gcr.io/cbb-research-dl/cwltool",
       "mounts": [
@@ -74,7 +62,22 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/pipeline_trimming_${SAMPLE}.log /data/${SAMPLE}/* gs://${OUTBUCKET}/"
+        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/${DB} gs://${OUTBUCKET}/ >> /data/pipeline_blastn_${DB}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -q -m cp /data/pipeline_blastn_${DB}.log gs://${OUTBUCKET}/"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -86,9 +89,7 @@
       "alwaysRun": true
     }
   ],
-  "environment": {
-    "CPUs": "16"
-  },
+  "environment": {},
   "resources": {
     "virtualMachine": {
       "bootDiskSizeGb": 60,
@@ -96,7 +97,7 @@
       "disks": [
         {
           "name": "gcloud-shared",
-          "sizeGb": 375,
+          "sizeGb": 750,
           "type":"local-ssd"
         }
       ],

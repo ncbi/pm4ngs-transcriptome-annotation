@@ -18,7 +18,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R gs://${INBUCKET}/${SAMPLE}.fastq.gz /data/${SAMPLE}.fastq.gz >> /data/pipeline_trimming_${SAMPLE}.log 2>&1"
+        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R gs://${INBUCKET}/${SAMPLE}.fastq.gz /data/${SAMPLE}.fastq.gz >> /data/pipeline_trimming_${SAMPLE}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -32,7 +32,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil cp gs://${INBUCKET}/${SAMPLE}_trimming.yml /data/${SAMPLE}_trimming.yml >> /data/pipeline_trimming_${SAMPLE}.log 2>&1"
+        "gsutil -q cp gs://${INBUCKET}/${SAMPLE}_trimming.yml /data/${SAMPLE}_trimming.yml >> /data/pipeline_trimming_${SAMPLE}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -60,7 +60,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/pipeline_trimming_${SAMPLE}.log /data/${SAMPLE}/* gs://${OUTBUCKET}/"
+        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/pipeline_trimming_${SAMPLE}.log /data/${SAMPLE}/* gs://${OUTBUCKET}/"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [

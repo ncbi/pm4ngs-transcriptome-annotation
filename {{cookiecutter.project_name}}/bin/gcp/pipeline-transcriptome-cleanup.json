@@ -32,7 +32,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R gs://${INBUCKET}/${TRANSCRIPTOME} /data/transcriptome.fsa.gz >> /data/pipeline.log 2>&1"
+        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R gs://${INBUCKET}/${TRANSCRIPTOME} /data/transcriptome.fsa.gz >> /data/pipeline.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -62,7 +62,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/output/*.fsa.gz gs://${INBUCKET}/ >> /data/pipeline.log 2>&1"
+        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/output/*.fsa.gz gs://${INBUCKET}/ >> /data/pipeline.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -77,7 +77,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil cp /data/pipeline.log gs://${INBUCKET}/"
+        "gsutil -q cp /data/pipeline.log gs://${INBUCKET}/"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [

@@ -18,7 +18,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -m cp gs://${BLAST_BUCKET}/*.tsv /data/blastdir/ >> /data/pipeline_cont_clean_${SAMPLE}.log 2>&1"
+        "gsutil -q -m cp gs://${BLAST_BUCKET}/*.tsv /data/blastdir/ >> /data/pipeline_cont_clean_${SAMPLE}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -32,7 +32,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -m cp gs://${INBUCKET}/taxonomy_networkx.pickle /data/taxonomy_networkx.pickle >> /data/pipeline_cont_clean_${SAMPLE}.log 2>&1"
+        "gsutil -q -m cp gs://${INBUCKET}/taxonomy_networkx.pickle /data/taxonomy_networkx.pickle >> /data/pipeline_cont_clean_${SAMPLE}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -46,7 +46,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -m cp gs://${INBUCKET}/${SAMPLE}_clean*.fastq.gz /data/ >> /data/pipeline_cont_clean_${SAMPLE}.log 2>&1"
+        "gsutil -q -m cp gs://${INBUCKET}/${SAMPLE}_clean*.fastq.gz /data/ >> /data/pipeline_cont_clean_${SAMPLE}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -78,7 +78,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/pipeline_cont_clean_${SAMPLE}.log /data/${SAMPLE}/* gs://${OUTBUCKET}/"
+        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R /data/pipeline_cont_clean_${SAMPLE}.log /data/${SAMPLE}/* gs://${OUTBUCKET}/"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
