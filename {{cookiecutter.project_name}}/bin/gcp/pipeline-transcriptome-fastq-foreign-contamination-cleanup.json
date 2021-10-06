@@ -1,0 +1,164 @@
+﻿{
+  "actions": [
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "mkdir -v /data/${SAMPLE} > /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -q cp -r gs://${BLAST_RESULTS} /data/ >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+{% if cookiecutter.sequencing_technology == 'paired-end' %}
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -q cp gs://${FASTQ_BUCKET}/${SAMPLE}_clean_1.fastq.gz /data/ >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -q cp gs://${FASTQ_BUCKET}/${SAMPLE}_clean_2.fastq.gz /data/ >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/Contamination/fastq-foreign-chromosome-cleanup.cwl --fastq1 /data/${SAMPLE}_clean_1.fastq.gz --fastq2 /data/${SAMPLE}_clean_2.fastq.gz --kingdom ${KINGDOM} --file_name_prefix ${TOTAL_PER_FILE} --blast_tsv_dir /data/${BLAST_RESULTS} --threads ${CPUs} >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "gcr.io/cbb-research-dl/cwltool",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    },
+{% else %}
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -q cp gs://${FASTQ_BUCKET}/${SAMPLE}_clean.fastq.gz /data/ >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/Contamination/fastq-foreign-chromosome-cleanup.cwl --fastq1 /data/${SAMPLE}_clean.fastq.gz --kingdom ${KINGDOM} --file_name_prefix ${TOTAL_PER_FILE} --blast_tsv_dir /data/${BLAST_RESULTS} --threads ${CPUs} >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "gcr.io/cbb-research-dl/cwltool",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    },
+{% endif %}
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp /data/${SAMPLE}/* gs://${OUTBUCKET}/ >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -q cp //data/pipeline_fastq_foreign_clean_${SAMPLE}.log gs://${OUTBUCKET}/"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    }
+  ],
+  "environment": {
+    "CPUs": "16"
+  },
+  "resources": {
+    "virtualMachine": {
+      "bootDiskSizeGb": 60,
+      "bootImage": "projects/cos-cloud/global/images/family/cos-stable",
+      "disks": [
+        {
+          "name": "gcloud-shared",
+          "sizeGb": 750,
+          "type":"local-ssd"
+        }
+      ],
+      "machineType": "n1-standard-16",
+      "preemptible": true,
+      "serviceAccount": {
+        "email": "default",
+        "scopes": [
+          "https://www.googleapis.com/auth/cloud-platform"
+        ]
+      }
+    },
+    "zones": [
+      "us-east1-c"
+    ]
+  }
+}

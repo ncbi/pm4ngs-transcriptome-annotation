@@ -17,7 +17,7 @@ import locale
 from multiprocessing import Pool
 
 from Bio import SeqIO
-from datetime import datetime
+from datetime import datetime, timezone
 import networkx as nx
 
 from pm4ngs.jupyterngsplugin.files.fastq.fastqc import parse_fastqc_zip
@@ -82,12 +82,6 @@ DATASET = '{{ cookiecutter.dataset_name }}'
 
 if not distutils.spawn.find_executable('gcloud'):
     raise ImportError('gcloud not in path.\nInstall: google-cloud-sdk\n')
-
-if not distutils.spawn.find_executable('elastic-blast.py'):
-    raise ImportError('elastic-blast not in path.\nInstall: elastic-blast\n')
-
-if not distutils.spawn.find_executable('kubectl'):
-    raise ImportError('kubectl not in path.\nInstall: kubernetes-client, version 1.18.8\n')
 
 ###############################################################
 #

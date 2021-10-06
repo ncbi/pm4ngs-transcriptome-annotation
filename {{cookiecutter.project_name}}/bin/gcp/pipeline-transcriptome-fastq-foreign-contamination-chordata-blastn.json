@@ -1,11 +1,10 @@
 ﻿{
   "actions": [
-{% if cookiecutter.sequencing_technology == 'paired-end' %}
     {
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q -m cp gs://${INBUCKET}/*_clean_foreign_1.fastq.gz /data/ > /data/pipeline_trinity.log 2>&1"
+        "mkdir -v /data/${SAMPLE}_${DB} > /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -19,37 +18,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q -m cp gs://${INBUCKET}/*_clean_foreign_2.fastq.gz /data/ >> /data/pipeline_trinity.log 2>&1"
-      ],
-      "imageUri": "google/cloud-sdk:slim",
-      "mounts": [
-        {
-          "disk": "gcloud-shared",
-          "path": "/data"
-        }
-      ]
-    },
-{% else %}
-    {
-      "commands": [
-        "/bin/sh",
-        "-c",
-        "gsutil -q -m cp gs://${INBUCKET}/*_clean_foreign.fastq.gz /data/ > /data/pipeline_trinity.log 2>&1"
-      ],
-      "imageUri": "google/cloud-sdk:slim",
-      "mounts": [
-        {
-          "disk": "gcloud-shared",
-          "path": "/data"
-        }
-      ]
-    },
-{% endif %}
-    {
-      "commands": [
-        "/bin/sh",
-        "-c",
-        "gsutil -q -m cp gs://${INBUCKET}/trinity.yml /data/ >> /data/pipeline_trinity.log 2>&1"
+        "gsutil -q cp gs://cbb-research-dl-blastdb-v5/BOTO_CONFIG /data/.boto >> /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -61,11 +30,11 @@
     },
     {
       "commands": [
-        "/bin/bash",
+        "/bin/sh",
         "-c",
-        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/ https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/tools/trinity/trinity.cwl trinity.yml >> /data/pipeline_trinity.log 2>&1",
+        "BOTO_PATH=/data/.boto gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' -o 'GSUtil:parallel_process_count=16' -o 'GSUtil:parallel_thread_count=16' cp -r gs://${BLASTBUCKET}/${DB} /data/ >> /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log 2>&1"
       ],
-      "imageUri": "gcr.io/cbb-research-dl/cwltool",
+      "imageUri": "google/cloud-sdk:slim",
       "mounts": [
         {
           "disk": "gcloud-shared",
@@ -77,7 +46,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q -m rsync -re /data/trinity gs://${OUTBUCKET}/ >> /data/pipeline_trinity.log 2>&1"
+        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp gs://${INBUCKET}/${SAMPLE}.fsa.gz /data/ >> /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log 2>&1",
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -92,7 +61,37 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q -m cp /data/pipeline_trinity.log gs://${OUTBUCKET}/"
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE}_${DB} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/Contamination/contamination-foreign-chromosome-blastn.cwl --blastdb /data/${DB} --blastdb_name ${DB} --threads ${CPUs} --perc_identity ${PERCENT_IDENTITY} --trans_fsa_gz /data/${SAMPLE}.fsa.gz >> /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log 2>&1"
+      ],
+      "imageUri": "gcr.io/cbb-research-dl/cwltool",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp /data/${SAMPLE}_${DB}/* gs://${OUTBUCKET}/ >> /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ],
+      "alwaysRun": true
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -q cp /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log gs://${OUTBUCKET}/"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -104,7 +103,10 @@
       "alwaysRun": true
     }
   ],
-  "environment": {},
+  "environment": {
+    "CPUs": "16",
+    "DB": "chordata"
+  },
   "resources": {
     "virtualMachine": {
       "bootDiskSizeGb": 60,
@@ -112,11 +114,11 @@
       "disks": [
         {
           "name": "gcloud-shared",
-          "sizeGb": 3000,
+          "sizeGb": 750,
           "type":"local-ssd"
         }
       ],
-      "machineType": "n2d-standard-64",
+      "machineType": "n1-standard-16",
       "preemptible": true,
       "serviceAccount": {
         "email": "default",

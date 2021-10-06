@@ -18,7 +18,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "vdb-config --report-cloud-identity yes --accept-gcp-charges yes"
+        "vdb-config --report-cloud-identity no --accept-gcp-charges yes"
       ],
       "imageUri": "ncbi/sra-tools",
       "mounts": [

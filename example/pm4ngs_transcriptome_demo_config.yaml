@@ -3,3 +3,6 @@ default_context:
   user_email: "veraalva@ncbi.nlm.nih.gov"
   project_name: "nopal-transcriptome"
   dataset_name: "PRJNA320545"
+  scientific_name: "Opuntia streptacantha"
+  sequencing_technology: "paired-end"
+  kingdom: "viridiplantae"
