@@ -27,6 +27,7 @@ from pm4ngs.jupyterngsplugin.utils.run_command import run_command
 from pm4ngs.jupyterngsplugin.utils.working_dir import working_dir
 from pm4ngs.jupyterngsplugin.utils.yaml_utils import write_to_yaml
 from pm4ngs.jupyterngsplugin.utils.yaml_utils import load_from_yaml
+from pm4ngs.cloud.gcp import update_pipeline
 
 from pm4ngs.jupyterngsplugin.markdown.utils import find_file_print_link_size, get_link_size
 from pm4ngs.jupyterngsplugin.utils.load_content_dict import load_content_dict_line
