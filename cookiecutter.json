@@ -5,6 +5,6 @@
   "dataset_name": "my_dataset_name",
   "scientific_name": "organism scientific name",
   "sequencing_technology": ["single-end", "paired-end"],
-  "kingdom": ["archaea", "arthropoda", "bacteria", "fungi", "chordata", "other_eukaryota", "other_metazoa", "viridiplantae", "viruses_and_viroids"]
+  "kingdom": ["archaea", "arthropoda", "bacteria", "fungi", "chordata", "eukaryota", "metazoa", "viridiplantae", "viruses"]
 }
 

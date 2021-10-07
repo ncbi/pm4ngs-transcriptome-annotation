@@ -1,4 +1,4 @@
-﻿{
+{
   "actions": [
 {% if cookiecutter.sequencing_technology == 'paired-end' %}
     {
