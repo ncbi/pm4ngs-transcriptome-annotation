@@ -63,7 +63,7 @@
       "commands": [
         "/bin/bash",
         "-c",
-        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/ https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/tools/trinity/trinity.cwl trinity.yml >> /data/pipeline_trinity.log 2>&1",
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/ https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/tools/trinity/trinity.cwl trinity.yml >> /data/pipeline_trinity.log 2>&1"
       ],
       "imageUri": "gcr.io/cbb-research-dl/cwltool",
       "mounts": [
