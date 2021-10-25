@@ -4,7 +4,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "mkdir -v /data/${SAMPLE}_${DB} > /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log 2>&1"
+        "mkdir -v /data/${SAMPLE}_${PARTITION} > /data/pipeline_fastq_clean_${SAMPLE}_${PARTITION}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -18,7 +18,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q cp gs://cbb-research-dl-blastdb-v5/BOTO_CONFIG /data/.boto >> /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log 2>&1"
+        "gsutil -q cp gs://${BLASTBUCKET}/BOTO_CONFIG /data/.boto >> /data/pipeline_fastq_clean_${SAMPLE}_${PARTITION}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -32,7 +32,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "BOTO_PATH=/data/.boto gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' -o 'GSUtil:parallel_process_count=16' -o 'GSUtil:parallel_thread_count=16' cp -r gs://${BLASTBUCKET}/${DB} /data/ >> /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log 2>&1"
+        "BOTO_PATH=/data/.boto gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' -o 'GSUtil:parallel_process_count=16' -o 'GSUtil:parallel_thread_count=16' cp -r gs://${BLASTBUCKET}/contamination_${PARTITION}.* /data/ >> /data/pipeline_fastq_clean_${SAMPLE}_${PARTITION}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -46,7 +46,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp gs://${INBUCKET}/${SAMPLE}.fsa.gz /data/ >> /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log 2>&1",
+        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp gs://${INBUCKET}/${SAMPLE}.fsa.gz /data/ >> /data/pipeline_fastq_clean_${SAMPLE}_${PARTITION}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -61,7 +61,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE}_${DB} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/Contamination/contamination-foreign-chromosome-blastn.cwl --blastdb /data/${DB} --blastdb_name ${DB}.fsa --threads ${CPUs} --perc_identity ${PERCENT_IDENTITY} --trans_fsa_gz /data/${SAMPLE}.fsa.gz >> /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log 2>&1"
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE}_${PARTITION} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/Contamination/contamination-foreign-chromosome-blastn.cwl --blastdb /data/ --blastdb_name contamination_${PARTITION} --threads ${CPUs} --perc_identity ${PERCENT_IDENTITY} --trans_fsa_gz /data/${SAMPLE}.fsa.gz >> /data/pipeline_fastq_clean_${SAMPLE}_${PARTITION}.log 2>&1"
       ],
       "imageUri": "gcr.io/cbb-research-dl/cwltool",
       "mounts": [
@@ -76,7 +76,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp /data/${SAMPLE}_${DB}/* gs://${OUTBUCKET}/ >> /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log 2>&1"
+        "gsutil -q -m -o 'GSUtil:parallel_composite_upload_threshold=150M' cp /data/${SAMPLE}_${PARTITION}/* gs://${OUTBUCKET}/ >> /data/pipeline_fastq_clean_${SAMPLE}_${PARTITION}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -91,7 +91,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q cp /data/pipeline_fastq_clean_${SAMPLE}_${DB}.log gs://${OUTBUCKET}/"
+        "gsutil -q cp /data/pipeline_fastq_clean_${SAMPLE}_${PARTITION}.log gs://${OUTBUCKET}/"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -127,7 +127,12 @@
       }
     },
     "zones": [
-      "us-east1-c"
+      "us-east1-c",
+      "us-east1-b",
+      "us-east1-d",
+      "us-east4-a",
+      "us-east4-b",
+      "us-east4-c"
     ]
   }
 }

@@ -18,7 +18,35 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q cp -r gs://${BLAST_RESULTS} /data/ >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+        "gsutil -q -m cp -r gs://${TAX_GROUP_BUCKET}/${TAX_GROUP_FILE} /data/ >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -q -m cp -r gs://${BLAST_RESULTS}/${TOTAL_PER_FILE}_*_contamination_*_blastn.tsv /data/ >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+      ],
+      "imageUri": "google/cloud-sdk:slim",
+      "mounts": [
+        {
+          "disk": "gcloud-shared",
+          "path": "/data"
+        }
+      ]
+    },
+    {
+      "commands": [
+        "/bin/sh",
+        "-c",
+        "gsutil -q -m cp -r gs://${BLAST_RESULTS}/${TOTAL_PER_FILE}_*.fsa.gz /data/ >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -33,7 +61,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q cp gs://${FASTQ_BUCKET}/${SAMPLE}_clean_1.fastq.gz /data/ >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+        "gsutil -q -m cp gs://${FASTQ_BUCKET}/${SAMPLE}_clean_1.fastq.gz /data/ >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -47,7 +75,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "gsutil -q cp gs://${FASTQ_BUCKET}/${SAMPLE}_clean_2.fastq.gz /data/ >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+        "gsutil -q -m cp gs://${FASTQ_BUCKET}/${SAMPLE}_clean_2.fastq.gz /data/ >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
       ],
       "imageUri": "google/cloud-sdk:slim",
       "mounts": [
@@ -61,7 +89,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/Contamination/fastq-foreign-chromosome-cleanup.cwl --fastq1 /data/${SAMPLE}_clean_1.fastq.gz --fastq2 /data/${SAMPLE}_clean_2.fastq.gz --kingdom ${KINGDOM} --file_name_prefix ${TOTAL_PER_FILE} --blast_tsv_dir /data/${BLAST_RESULTS} --threads ${CPUs} >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/Contamination/fastq-foreign-chromosome-cleanup.cwl --fastq1 /data/${SAMPLE}_clean_1.fastq.gz --fastq2 /data/${SAMPLE}_clean_2.fastq.gz --tax_group ${TAX_GROUP} --file_name_prefix ${TOTAL_PER_FILE} --data_dir /data/ --threads ${CPUs} --partitions ${PARTITIONS} --tax_group_pickle /data/${TAX_GROUP_FILE} >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
       ],
       "imageUri": "gcr.io/cbb-research-dl/cwltool",
       "mounts": [
@@ -91,7 +119,7 @@
       "commands": [
         "/bin/sh",
         "-c",
-        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/Contamination/fastq-foreign-chromosome-cleanup.cwl --fastq1 /data/${SAMPLE}_clean.fastq.gz --kingdom ${KINGDOM} --file_name_prefix ${TOTAL_PER_FILE} --blast_tsv_dir /data/${BLAST_RESULTS} --threads ${CPUs} >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
+        "cwltool --no-container --beta-conda-dependencies --beta-dependencies-directory / --on-error continue --tmpdir-prefix /data/ --tmp-outdir-prefix /data/ --outdir /data/${SAMPLE} https://raw.githubusercontent.com/ncbi/cwl-ngs-workflows-cbb/master/workflows/Contamination/fastq-foreign-chromosome-cleanup.cwl --fastq1 /data/${SAMPLE}_clean.fastq.gz --tax_group ${TAX_GROUP} --file_name_prefix ${TOTAL_PER_FILE} --data_dir /data/ --threads ${CPUs} --partitions ${PARTITIONS} --tax_group_pickle /data/${TAX_GROUP_FILE} >> /data/pipeline_fastq_foreign_clean_${SAMPLE}.log 2>&1"
       ],
       "imageUri": "gcr.io/cbb-research-dl/cwltool",
       "mounts": [
@@ -144,7 +172,7 @@
       "disks": [
         {
           "name": "gcloud-shared",
-          "sizeGb": 750,
+          "sizeGb": 375,
           "type":"local-ssd"
         }
       ],

@@ -75,9 +75,9 @@
         "/bin/sh",
         "-c",
 {% if cookiecutter.sequencing_technology == 'paired-end' %}
-        "gsutil -m -q -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R gs://${INBUCKET}/${SAMPLE}_clean_1.fastq.fsa /data/ >> /data/pipeline_fastq_clean_${SAMPLE}.log 2>&1",
+        "gsutil -m -q -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R gs://${INBUCKET}/${SAMPLE}_clean_1.fastq.fsa /data/ >> /data/pipeline_fastq_clean_${SAMPLE}.log 2>&1"
 {% else %}
-        "gsutil -m -q -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R gs://${INBUCKET}/${SAMPLE}_clean.fastq.fsa /data/ >> /data/pipeline_fastq_clean_${SAMPLE}.log 2>&1",
+        "gsutil -m -q -o 'GSUtil:parallel_composite_upload_threshold=150M' cp -R gs://${INBUCKET}/${SAMPLE}_clean.fastq.fsa /data/ >> /data/pipeline_fastq_clean_${SAMPLE}.log 2>&1"
 {% endif %}
       ],
       "imageUri": "google/cloud-sdk:slim",
